@@ -44,3 +44,4 @@ https://docs.google.com/document/d/e/2PACX-1vTXpFXuIQJimIJ6rsD13XC-MHJnpDlarlWiY
 
 * [phpQuery](https://github.com/punkave/phpQuery)
   * [Documentation](https://code.google.com/archive/p/phpquery/wikis/Manual.wiki)
+  * Example: [Manipulating DOM Documents with phpQuery](https://codingexplained.com/coding/php/manipulating-dom-documents-with-phpquery)
