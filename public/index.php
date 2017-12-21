@@ -1,14 +1,26 @@
 <?php
+/*
+	Page
+	====
+	This uses a single Google Document as the basis of content for a web page.
+	The Google Doc allows updates every 5 minutes. However the local cache time can be set higher (and should be).
+
+	Original document:
+	https://docs.google.com/document/d/1KKPrL3MCtA0V8K6UIzMzeCdDG54NFDrEDhS5Y6IW6QE/edit
+
+	Publish Link:
+	https://docs.google.com/document/d/e/2PACX-1vTXpFXuIQJimIJ6rsD13XC-MHJnpDlarlWiYsBoL0cYBkYyyT0l9LJ7RNfRreod7QLwqCCTdaixJZhe/pub
+*/
 
 include ("../document.php");
 $document = new Document;
-// $response = $document->Run( "2PACX-1vTXpFXuIQJimIJ6rsD13XC-MHJnpDlarlWiYsBoL0cYBkYyyT0l9LJ7RNfRreod7QLwqCCTdaixJZhe" );
 $response = $document->Run( "2PACX-1vTXpFXuIQJimIJ6rsD13XC-MHJnpDlarlWiYsBoL0cYBkYyyT0l9LJ7RNfRreod7QLwqCCTdaixJZhe" );
+
 ?>
 <html lang="en">
 <head>
 	<meta charset="utf-8" />
-	<title><?php print $response["title"]; ?></title>
+	<title><?php print $response["page"]["title"]; ?></title>
 	<link rel="stylesheet" type="text/css" href="style.css" media="all" />
 	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
