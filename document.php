@@ -5,15 +5,15 @@
 
 
 	Example Documents:
+
+		Page:
 		https://docs.google.com/document/d/e/2PACX-1vTXpFXuIQJimIJ6rsD13XC-MHJnpDlarlWiYsBoL0cYBkYyyT0l9LJ7RNfRreod7QLwqCCTdaixJZhe/pub
 
-	ToDO:
-		Links. Google rewrites them liek so:
+		Site
+		https://docs.google.com/document/d/e/2PACX-1vR-pd40hZJdD073n53Ejt5OMqADdFYDUYj1JJuA1mbuppCqcWCZ3C9WG6xRMpDYXpGo_ZOt0gShfwMK/pub
 
-		From this:
-			http://www.google.com/?x=test
-		To this:
-			https://www.google.com/url?q=http://www.google.com/?x%3Dtest&sa=D&ust=1513804622536000&usg=AFQjCNHFwT9iRKkOJSA_M-xAZixXiGMy3Q
+	ToDo:
+		* Site document with a Page that references a different document.
 */
 date_default_timezone_set('America/New_York');
 
@@ -24,8 +24,27 @@ class Document {
 	public $host;
 
 	public function __construct() {
-		$this->cacheDir = "cache";
-		$this->title = "";
+
+		$this->cacheDir  = "cache";
+
+		$this->pageIndex = array();
+		$this->pageCurrent = "";
+
+		$this->pageName  = "";
+		$this->pageTitle = "";
+		$this->pageMode  = false;
+		$this->pageMatch = false;
+
+		$this->titleIndex = array();
+
+		if (isset($_GET["page"])) {
+			$pageName = $this->sanitziedText($_GET["page"]);
+			if (!empty($pageName)) {
+				$this->pageName = $pageName;
+				$this->pageMode = true;
+			}
+		}
+
 
 		$this->allowedExtensions = array(
 			"js", "css"
@@ -46,13 +65,17 @@ class Document {
 	private function getDocument($id) {
 
 		$response = array(
-			"status"  => "hit",
-			"id"      => "",
-			"url"     => "",
-			"file"    => "",
-			"title"   => "",
-			"styles"  => "",
-			"content" => "",
+			"status"     => "hit",
+			"file"       => "",
+			"page"       => array(
+				"id"     => "",
+				"name"   => $this->pageName,
+				"title"  => "",
+				"index"  => array(),
+				"source" => ""
+			),
+			"styles"     => "",
+			"content"    => "",
 		);
 
 		if ($this->startsWith($id, "https")) {
@@ -65,11 +88,16 @@ class Document {
 		if (!file_exists($this->cacheDir)) {
 			mkdir($this->cacheDir, 0777, true);
 		}
-		$file = $this->cacheDir . "/" . md5($id) . ".js";
 
-		$response["id"]   = $id;
-		$response["url"]  = $url;
+		if (!empty($this->pageName)) {
+			$file = $this->cacheDir . "/" . md5($id) . "_" . $this->pageName . ".js";
+		} else {
+			$file = $this->cacheDir . "/" . md5($id) . ".js";
+		}
+
 		$response["file"] = $file;
+		$response["page"]["id"] = $id;
+		$response["page"]["source"] = $url;
 
 		$refesh = $_GET["refresh"];
 
@@ -96,14 +124,15 @@ class Document {
 				$doc = phpQuery::newDocument($html);
 
 			/*	Style */
-				$response["styles"]  = $this->getStyles($doc);
+				$response["styles"]    = $this->getStyles($doc);
 
 			/*	Markup */
-				$response["content"] = $this->getMarkup($doc);
+				$response["content"]   = $this->getMarkup($doc);
 
-			/*	Title */
-				$response["title"]   = $this->title;
-
+			/*	Page Information */
+				$response["page"]["index"] = $this->pageIndex;
+				$response["page"]["title"] = $this->pageTitle;
+		
 			/*	Save */
 				file_put_contents($file, json_encode($response, JSON_PRETTY_PRINT));
 			}
@@ -113,12 +142,12 @@ class Document {
 			$response["status"]  = "cache";
 		}
 
+		// print "<!--\n\n"; print_r($response); print "\n\n-->\n"; exit;
+
 		return $response;
 	}
 
 	private function getMarkup($doc) {
-
-		/* TODO: Handle links and auto-links */
 
 		$allowedTags = array(
 			"p",
@@ -147,29 +176,39 @@ class Document {
 					$nl = 1;
 				} else {
 
+					$el = "";
+
 				/*	Check for multi-lines and stop it beyond 2 in a row */
 
 					if ($nl === 1) {
-						$content[] = "<br>";
+						$el = "<br>";
 						$nl = 0;
 					}
 
 				/*	Check for a Key */
 
-					$keyEntity = $this->keyEntityManager($t);
-					if (!empty($keyEntity)) {
-						$content[] = $keyEntity;
-						continue;
+					$entity = $this->keyEntityManager($t);
+					if (!$entity["ignore"]) {
+						$el = $entity["markup"];
+					} else {
+
+					/*	Check for Tag */
+
+						$h = trim($e->html());
+						if (!$this->startsWith($h, ":")) { /* Ignore lines starting with colon */
+							$el = "<" . $n . ">" . $h . "</" . $n . ">";
+						}
 					}
 
-				/*	Check for Tag */
-
-					$h = trim($e->html());
-					if (!$this->startsWith($h, ":")) { /* Ignore lines starting with colon */
-						$content[] = "<" . $n . ">" . $h . "</" . $n . ">";
+					if ($this->pageMode === true) {
+						if ($this->pageMatch === true) {
+							$content[] = $el;
+						}
+					} else {
+						$content[] = $el;
 					}
+
 				}
-
 			}
 		}
 
@@ -180,6 +219,18 @@ class Document {
 		return $content;
 	}
 
+/*
+	getSTyles
+	
+	We look at the GDoc for style info. There are two places where this happens and we are only interested in one.
+	Bear in mind, these rules can change as Google devs make changes...
+
+	The STYLE tag we are intersted has (at various points):
+	* Wrapped in an @IMPORT tag
+	* Been in a STYLE tag that does not have a style for the BODY tag (or #header, #footer, IFRAME too)
+
+	Right now we look at both conditions to determien what styles to pull in.
+*/
 	private function getStyles($doc) {
 
 		$response   = "";
@@ -188,11 +239,16 @@ class Document {
 
 		foreach($doc['style'] as $el){
 			$styleContent = trim(pq($el)->text());
-			if ($this->startsWith($styleContent, "@import")) {
+
+		/*	Wrapped in an @import statement */
+			$okConditionImport = $this->startsWith($styleContent, "@import");
+		/*	Does NOT contain iframe style rule */
+			$okConditionRuleMissing = (strrpos($styleContent, "iframe") === false) ? true : false;
+
+			if ($okConditionImport || $okConditionRuleMissing) {
 				$rules = explode("}", $styleContent);
 				foreach($rules as $rule){
 					if ($this->startsWith($rule, ".c")) {
-						
 						$styles[] = $rule . "}";
 					}
 				}
@@ -201,15 +257,12 @@ class Document {
 
 		if (!empty($styles)) {
 			$response = implode("\n", $styles);
-
 			$response = str_replace(array(
 				"font-family:\"Arial\"",
 				"vertical-align:baseline",
 				"page-break-after:avoid",
 				"text-decoration:none",
 				"text-align:left",
-				// "font-style:normal",
-				// "font-weight:400",
 			), "", $response);
 			$response = str_replace(array(";;;", ";;"), ";", $response);
 		}
@@ -220,37 +273,87 @@ class Document {
 	function keyEntityManager($t) {
 
 		$allowedKeys = array(
+			"page",
 			"title",
 			"image",
 			"video",
 		);
 
-		$markup = "";
+		$entity = array(
+			"ignore" => true,
+			"markup" => ""
+		);
 
 		if (strpos($t, ":") !== false ) {
 			foreach($allowedKeys as $key){
 				$key = strtolower($key);
-				if ($this->startsWith(strtolower($t), $key  . ":")) {
+
+				if ($this->startsWith(strtolower($t), $key . ":")) {
+
+					$entity = array(
+						"ignore" => true,
+						"markup" => ""
+					);
+
 					switch ($key) {
+						case "page":
+
+							if ($this->pageMode === true) {
+								$pageName = trim(str_replace(array("page:", "Page:"), "", $t));
+								if (!empty($pageName)){
+									if (!in_array($pageName, $this->pageIndex)) {
+										$this->pageIndex[$pageName] = "";
+										$this->pageCurrent = $pageName;
+									}
+									if (strtolower($pageName) === strtolower($this->pageName)) {
+										$this->pageMatch = true;
+									} else {
+										$this->pageMatch = false;
+									}
+								}
+							}
+							$entity["ignore"] = false;
+							break;
+
 						case "title":
-							$this->title = trim(str_replace(array("title:", "Title:"), "", $t));
+
+							$title = trim(str_replace(array("title:", "Title:"), "", $t));
+							if ($this->pageMode === true) {
+								if ($this->pageMatch === true) {
+									$this->pageTitle = $title;
+								}
+								if (isset($this->pageIndex[$this->pageCurrent])) {
+									$this->pageIndex[$this->pageCurrent] = $title;
+								}
+							} else {
+								$this->pageTitle = $title;
+							}
+							$entity["ignore"] = false;
 							break;
+
 						case "comment":
-							$markup = "<!-- " . trim(str_replace(array("title:", "Title:"), "", $t)) . " -->";
+							$entity = array(
+								"ignore" => false,
+								"markup" => "<!-- " . trim(str_replace(array("title:", "Title:"), "", $t)) . " -->"
+							);
 							break;
+
 						case "css":
 						case "image":
 						case "video":
 						case "javascript":
 						default:
-							$markup = $this->addFunctionalElement($t);
+							$entity = array(
+								"ignore" => false,
+								"markup" => $this->addFunctionalElement($t)
+							);
 							break;
 					}
 				}
 			}
 		}
 
-		return $markup;
+		return $entity;
 	}
 
 	private function addFunctionalElement($t) {
@@ -288,6 +391,14 @@ class Document {
 		return "";
 	}
 
+/*
+	cleanURLs
+
+	* In Google Doc, all links are prefxied with google.com based URL for tracking. We hates this.
+	* Using "mb_convert_encoding" snippet avoids condign issues (default is ISO?)
+	* Using "LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD" means that
+	  in the output, there will be no DOCTYPE, HTML or BODY tags.
+*/
 	private function cleanURLs($html) {
 		$hrefPosition = strrpos($html, "href=");
 		if (hrefPosition === false) {
@@ -296,7 +407,7 @@ class Document {
 
 		$dom = new DOMDocument;
 		libxml_use_internal_errors(true);
-		$dom->loadHTML(mb_convert_encoding($html, 'HTML-ENTITIES', 'UTF-8'));
+		$dom->loadHTML(mb_convert_encoding($html, 'HTML-ENTITIES', 'UTF-8'), LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
 		libxml_clear_errors();
 
 		foreach ($dom->getElementsByTagName('a') as $node) {
@@ -304,7 +415,7 @@ class Document {
 			$path = str_replace("https://www.google.com/url?q", "q", $href);
 			parse_str($path, $output);
 			$node->setAttribute('href', $output["q"]);
-		}	
+		}
 
 		$html = $dom->saveHtml();
 		unset($dom);
@@ -312,6 +423,10 @@ class Document {
 	}
 
 /*	Utilities */
+
+	private function sanitziedText($str) {
+		return strtolower( preg_replace('/[^\w-]/', '', $str) );
+	}
 
 	private function getFileExtension($url) {
 		return strtolower( end( explode(".", parse_url($url, PHP_URL_PATH)) ) );
