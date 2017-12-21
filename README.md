@@ -14,10 +14,6 @@ php -S localhost:2340
 Browser:
 http://localhost:2340/
 
-```
-cd ~/Dropbox/Development/md-archie-docs/public ; php -S localhost:2340 
-```
-
 ## Linking a Google Document:
 
 1. Create a new Google Document by visiting this link:
@@ -34,11 +30,14 @@ kicker: blah
 6. Copy the URL that appears in as the new link
 7. Click the "X" in top-right corner to close.
 
-There is a Google Dicument already Published to the web that demontartes styles and formats teh come through:
+There is a Google Document already Published to the web that demonstrates styles and formats the come through:
 
 https://docs.google.com/document/d/e/2PACX-1vTXpFXuIQJimIJ6rsD13XC-MHJnpDlarlWiYsBoL0cYBkYyyT0l9LJ7RNfRreod7QLwqCCTdaixJZhe/pub
 
+## To Do
 
+* Question: Remove phpQuery as a dependency?
+* More documentation on usage (multi-page etc)
 
 ## Dependencies
 
