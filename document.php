@@ -3,7 +3,6 @@
 // error_reporting(E_ERROR | E_WARNING | E_PARSE | E_NOTICE);
 /*
 
-
 	Example Documents:
 
 		Page:
@@ -21,11 +20,10 @@ $vendorPath = dirname($_SERVER['DOCUMENT_ROOT']) . "/lib";
 
 class Document {
 
-	public $host;
-
 	public function __construct() {
 
 		$this->cacheDir  = "cache";
+		$this->cacheTime = 5; /* Minutes */
 
 		$this->pageIndex = array();
 		$this->pageCurrent = "";
@@ -35,8 +33,6 @@ class Document {
 		$this->pageMode  = false;
 		$this->pageMatch = false;
 
-		$this->titleIndex = array();
-
 		if (isset($_GET["page"])) {
 			$pageName = $this->sanitziedText($_GET["page"]);
 			if (!empty($pageName)) {
@@ -44,7 +40,6 @@ class Document {
 				$this->pageMode = true;
 			}
 		}
-
 
 		$this->allowedExtensions = array(
 			"js", "css"
@@ -102,24 +97,16 @@ class Document {
 		$refesh = $_GET["refresh"];
 
 		$fileExists = is_file($file);
-		if (true || !$fileExists || time()-filemtime($file) > 1 * 60 || $refesh === "y") { /* 1 minute */
+		if (!$fileExists || time()-filemtime($file) > $this->cacheTime * 60 || $refesh === "y") {
 
-			include "../lib/phpQuery.php";
+			$html = $this->getLinkContent($url);
 			$status  = "hit";
-			$options = array(
-				'http' => array(
-					'method' => "GET",
-					'header' => "Accept-language: en\r\n" .
-						"User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/57.0.2987.133 Safari/537.36\r\n" // i.e. An iPad
-				)
-			);
-
-			$context = stream_context_create($options);
-			$html    = @file_get_contents($url, false, $context);
 
 			if ($html === false) {
 				$response["content"] = "<!-- Error -->";
 			} else {
+
+				include "../lib/phpQuery.php";
 
 				$doc = phpQuery::newDocument($html);
 
@@ -138,10 +125,14 @@ class Document {
 			}
 
 		} else {
-			$response = json_decode($file, true);
+
+			$response = file_get_contents($file);
+			$response = json_decode($response, true);
+
 			$response["status"]  = "cache";
 		}
 
+		// Helpful for debugging:
 		// print "<!--\n\n"; print_r($response); print "\n\n-->\n"; exit;
 
 		return $response;
@@ -212,7 +203,7 @@ class Document {
 			}
 		}
 
-		$content = implode("\n", $content);
+		$content = implode("\n\t", $content) . "\n";
 
 		$content = $this->cleanURLs( $content );
 
@@ -220,7 +211,7 @@ class Document {
 	}
 
 /*
-	getSTyles
+	getStyles
 	
 	We look at the GDoc for style info. There are two places where this happens and we are only interested in one.
 	Bear in mind, these rules can change as Google devs make changes...
@@ -255,6 +246,11 @@ class Document {
 			}
 		}
 
+	/*
+		A number of styles are superficial and are removed so
+		its easier to over-ride with your own styles.
+		Adjust this as nesesary.
+	*/
 		if (!empty($styles)) {
 			$response = implode("\n", $styles);
 			$response = str_replace(array(
@@ -270,6 +266,13 @@ class Document {
 		return $response;
 	}
 
+/*
+	keyEntityManager
+
+	Check for pre-defniend key/value pairs.
+	The most complex cases are determineing that a document deals with multiple pages
+	or has a provided title. 
+*/
 	function keyEntityManager($t) {
 
 		$allowedKeys = array(
@@ -398,6 +401,9 @@ class Document {
 	* Using "mb_convert_encoding" snippet avoids condign issues (default is ISO?)
 	* Using "LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD" means that
 	  in the output, there will be no DOCTYPE, HTML or BODY tags.
+
+	Rather than reply on $node->setAttribute and then $dom->saveHtml to get the revised HTML
+	we use a search and replace as there were problmes with it doing larger improper changes to the HTML.
 */
 	private function cleanURLs($html) {
 		$hrefPosition = strrpos($html, "href=");
@@ -410,19 +416,55 @@ class Document {
 		$dom->loadHTML(mb_convert_encoding($html, 'HTML-ENTITIES', 'UTF-8'), LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
 		libxml_clear_errors();
 
+		$replaceThis = array();
+		$withThis    = array();
+
 		foreach ($dom->getElementsByTagName('a') as $node) {
 			$href = $node->getAttribute( 'href' );
 			$path = str_replace("https://www.google.com/url?q", "q", $href);
 			parse_str($path, $output);
-			$node->setAttribute('href', $output["q"]);
+			$replaceThis[] = $href;
+			$withThis[] = $output["q"];
+			$instancesToReplace[] = array($href, $output["q"]);
 		}
-
-		$html = $dom->saveHtml();
 		unset($dom);
+
+		$html = str_replace($replaceThis, $withThis, $html);
+
 		return $html;
 	}
 
+	private function getUserAgentString() {
+		return $this->getRandomElements(array(
+			"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_2) AppleWebKit/601.3.9 (KHTML, like Gecko) Version/9.0.2 Safari/601.3.9",
+			"Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/47.0.2526.111 Safari/537.36",
+			"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.95 Safari/537.36",
+			"Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/54.0.2840.99 Safari/537.36",
+			"Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/54.0.2840.99 Safari/537.36"
+		), 1);
+	}
+
+	private function getLinkContent($url) {
+		$options = array(
+			'http' => array(
+				'method' => "GET",
+				'header' => "Accept-language: en\r\n" .
+					"User-Agent: " . $this->getUserAgentString() . "\r\n"
+			)
+		);
+		$context = stream_context_create($options);
+		return @file_get_contents($url, false, $context);
+	}
+
 /*	Utilities */
+
+	private function getRandomElements( $array, $limit = 1 ) {
+		shuffle($array);
+		if ( $limit > 0 ) {
+			$array = array_splice($array, 0, $limit);
+		}
+		return $array;
+	}
 
 	private function sanitziedText($str) {
 		return strtolower( preg_replace('/[^\w-]/', '', $str) );
@@ -443,5 +485,12 @@ class Document {
 
 	private function endsWith($haystack, $needle) {
 		return $needle === "" || (($temp = strlen($haystack) - strlen($needle)) >= 0 && strpos($haystack, $needle, $temp) !== FALSE);
+	}
+
+	private function contains($str, array $arr) {
+		foreach($arr as $a) {
+			if (stripos($str, $a) !== false) return true;
+		}
+		return false;
 	}
 }
