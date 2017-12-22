@@ -54,6 +54,9 @@ There are a number of Google Documents already Published to the web that demonst
 
 * Question: Remove phpQuery as a dependency?
 * More documentation on usage (multi-page etc)
+* Embeds
+  * Embed external media and elements.
+  * Example: Twitter, Instagram, Google Forms, YouTube etc.
 
 ## Dependencies
 
