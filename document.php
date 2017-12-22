@@ -1,6 +1,4 @@
 <?php
-
-// error_reporting(E_ERROR | E_WARNING | E_PARSE | E_NOTICE);
 /*
 
 	Example Documents:
@@ -13,16 +11,19 @@
 
 	ToDo:
 		* Site document with a Page that references a different document.
+
+	More information:
+	* https://github.com/donohoe/veronica-docs
+
 */
 date_default_timezone_set('America/New_York');
-
-$vendorPath = dirname($_SERVER['DOCUMENT_ROOT']) . "/lib";
 
 class Document {
 
 	public function __construct() {
 
-		$this->cacheDir  = "cache";
+		$this->path      = dirname($_SERVER['DOCUMENT_ROOT']);
+		$this->cacheDir  = $this->path . "/public/cache";
 		$this->cacheTime = 5; /* Minutes */
 
 		$this->pageIndex = array();
@@ -106,7 +107,7 @@ class Document {
 				$response["content"] = "<!-- Error -->";
 			} else {
 
-				include "../lib/phpQuery.php";
+				include $this->path . "/lib/phpQuery.php";
 
 				$doc = phpQuery::newDocument($html);
 
