@@ -20,9 +20,10 @@ http://localhost:2340/
 https://docs.google.com/document/create
 2. Copy/Paste this example into the document:
 ```
-headline: This is it
-leadin: Hello to the lead in.
-kicker: blah
+Hello World
+Title: Hello
+This is simple single page example. It really doesn't get more basic than this.
+Google only allows updates to go through every 5 minutes so this isn't going to be any good for live-blogging. In addition, the code has local file caching set to 5 minutes so it could be anywhere between 5 and 10 minutes for changes to take affect.
 ```
 3. Go to: `File > Publish` to the web...
 4. Click `Publish`
@@ -30,14 +31,33 @@ kicker: blah
 6. Copy the URL that appears in as the new link
 7. Click the "X" in top-right corner to close.
 
-There is a Google Document already Published to the web that demonstrates styles and formats the come through:
+There are a number of Google Documents already Published to the web that demonstrates styles and functioanlity. They include:
 
-https://docs.google.com/document/d/e/2PACX-1vTXpFXuIQJimIJ6rsD13XC-MHJnpDlarlWiYsBoL0cYBkYyyT0l9LJ7RNfRreod7QLwqCCTdaixJZhe/pub
+1. Hello World
+  * Very basic example.
+  * [Document URL](https://docs.google.com/document/d/1k0-Pg1pqUh31gdSw4QxKSfAFsFsktkSfQbqq2nDUmTw/)
+  * [Web Publish URL](https://docs.google.com/document/d/e/2PACX-1vQ76OboMhN5zvMZ43LMsu3SvnGts7m8eM3k0VAB5rL22KNjOISNNpN4xCMNyA0dwkf15pxjZ7z1C48i/pub)
+    * Google ID is: _2PACX-1vQ76OboMhN5zvMZ43LMsu3SvnGts7m8eM3k0VAB5rL22KNjOISNNpN4xCMNyA0dwkf15pxjZ7z1C48i_
+2. Styles and Elements
+  * Various supported text styling, fonts, headers and usag eof tables, images, css etc.
+  * [Document URL](https://docs.google.com/document/d/1KKPrL3MCtA0V8K6UIzMzeCdDG54NFDrEDhS5Y6IW6QE/)
+  * [Web Publish URL](https://docs.google.com/document/d/e/2PACX-1vTXpFXuIQJimIJ6rsD13XC-MHJnpDlarlWiYsBoL0cYBkYyyT0l9LJ7RNfRreod7QLwqCCTdaixJZhe/pub)
+    * Google ID is: _2PACX-1vTXpFXuIQJimIJ6rsD13XC-MHJnpDlarlWiYsBoL0cYBkYyyT0l9LJ7RNfRreod7QLwqCCTdaixJZhe_
+3. Pages
+  * An example of using one document to manage 3 web pages
+  * [Document URL](https://docs.google.com/document/d/1naguPdhgtenA3y_tRtNQU91QlK92zch40YYpa14yoJA/)
+  * [Web Publish URL](https://docs.google.com/document/d/e/2PACX-1vR-pd40hZJdD073n53Ejt5OMqADdFYDUYj1JJuA1mbuppCqcWCZ3C9WG6xRMpDYXpGo_ZOt0gShfwMK/pub)
+    * Google ID is: _2PACX-1vR-pd40hZJdD073n53Ejt5OMqADdFYDUYj1JJuA1mbuppCqcWCZ3C9WG6xRMpDYXpGo_ZOt0gShfwMK_
+
 
 ## To Do
 
 * Question: Remove phpQuery as a dependency?
 * More documentation on usage (multi-page etc)
+* Embeds
+  * Embed external media and elements.
+  * Example: Twitter, Instagram, Google Forms, YouTube etc.
+* Syntax for indicating group of images to be treated as a Slideshow
 
 ## Dependencies
 
