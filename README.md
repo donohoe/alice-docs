@@ -1,6 +1,6 @@
 # VeronicaDocs
 
-A simplified framework and structure for using Google Docs to edit, mange, and publish content to the web in a quick and friendly manner with minimal setup and configuration.
+A simplified framework and structure for using Google Docs editor to write, mange, and publish content to the web in a quick and friendly manner with minimal setup and configuration.
 
 ## Sandbox & Local Development
 ```
