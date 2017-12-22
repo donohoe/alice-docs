@@ -25,6 +25,9 @@ class Document {
 		$this->path      = dirname($_SERVER['DOCUMENT_ROOT']);
 		$this->cacheDir  = $this->path . "/public/cache";
 		$this->cacheTime = 5; /* Minutes */
+		$this->setupDirs();
+
+		$this->embedLazyLoad = false;
 
 		$this->pageIndex = array();
 		$this->pageCurrent = "";
@@ -51,11 +54,33 @@ class Document {
 		$this->allowedImageExtensions = array(
 			"png", "gif", "jpg", "jpeg"
 		);
+
+		$this->embedRegex = implode("|", array(
+				"(https?:\/\/w{0,3}\.?instagram.com\/p\/[\w\d\-]{10,15}\/?)",
+				"(https?:\/\/w{0,3}\.?twitter.com\/\w*\/status\/\d{4,20}\/?)[\'\"]{1}>\w*\s*\d{1,2},\s*\d{4}",
+				"(https?:\/\/w{0,3}\.?(?:youtube\.com|youtu\.be)\/(?:watch|v|vi|embed)?\/?(?:\?v=|\?vi=)?[\w\d\-]{10,15}\/?(?:\?.*)?)",
+				"(https?:\/\/w\.soundcloud.com\/player\/\?url=https%3A\/\/api\.soundcloud\.com\/.*\")",
+				"(https?:\/\/w{0,3}\.?soundcloud.com\/[\w\d\-\_]*\/[\w\d\-]*\/?)",
+				"(https?:\/\/embed.spotify.com\/[=\dA-Za-z?%]*)\"",
+				"(https?:\/\/w{0,3}\.?hulu.com\/embed\/[\w\d]*)",
+				"(https?:\/\/w{0,3}\.?hulu.com\/embed\.html\?eid=[\w\d]*)",
+				"(https?:\/\/w{0,3}\.facebook\.com\/plugins\/post\.php\?href=https?[\w\d%&;=\.]*)\"",
+				"(\/\/connect\.facebook\.net\/en_US\/sdk\.js#[\d\w=&.]*)",
+				"(https?:\/\/w{0,3}.google.[a-z.]+\/maps\/(?:.*?))\""
+			)
+		);
 	}
 
     function Run($id) {
 		$document = $this->getDocument( $id );
 		return $document;
+	}
+
+	private function setupDirs() {
+		if (!file_exists($this->cacheDir)) {
+			mkdir($this->cacheDir, 0777, true);
+			mkdir($this->cacheDir . "/embeds", 0777, true);
+		}
 	}
 
 	private function getDocument($id) {
@@ -81,9 +106,6 @@ class Document {
 			$url = "https://docs.google.com/document/d/e/" . $id . "/pub";
 		}
 
-		if (!file_exists($this->cacheDir)) {
-			mkdir($this->cacheDir, 0777, true);
-		}
 
 		if (!empty($this->pageName)) {
 			$file = $this->cacheDir . "/" . md5($id) . "_" . $this->pageName . ".js";
@@ -98,7 +120,7 @@ class Document {
 		$refesh = $_GET["refresh"];
 
 		$fileExists = is_file($file);
-		if (!$fileExists || time()-filemtime($file) > $this->cacheTime * 60 || $refesh === "y") {
+		if (true || !$fileExists || time()-filemtime($file) > $this->cacheTime * 60 || $refesh === "y") {
 
 			$html = $this->getLinkContent($url);
 			$status  = "hit";
@@ -276,9 +298,15 @@ class Document {
 */
 	function keyEntityManager($t) {
 
+		// return array(
+		// 	"ignore" => true,
+		// 	"markup" => "HELLO"
+		// );
+		
 		$allowedKeys = array(
 			"page",
 			"title",
+			"embed",
 			"image",
 			"video",
 		);
@@ -301,38 +329,11 @@ class Document {
 
 					switch ($key) {
 						case "page":
-
-							if ($this->pageMode === true) {
-								$pageName = trim(str_replace(array("page:", "Page:"), "", $t));
-								if (!empty($pageName)){
-									if (!in_array($pageName, $this->pageIndex)) {
-										$this->pageIndex[$pageName] = "";
-										$this->pageCurrent = $pageName;
-									}
-									if (strtolower($pageName) === strtolower($this->pageName)) {
-										$this->pageMatch = true;
-									} else {
-										$this->pageMatch = false;
-									}
-								}
-							}
-							$entity["ignore"] = false;
+							$entity = $this->keyPage($t);
 							break;
 
 						case "title":
-
-							$title = trim(str_replace(array("title:", "Title:"), "", $t));
-							if ($this->pageMode === true) {
-								if ($this->pageMatch === true) {
-									$this->pageTitle = $title;
-								}
-								if (isset($this->pageIndex[$this->pageCurrent])) {
-									$this->pageIndex[$this->pageCurrent] = $title;
-								}
-							} else {
-								$this->pageTitle = $title;
-							}
-							$entity["ignore"] = false;
+							$entity = $this->keyTitle($t);
 							break;
 
 						case "comment":
@@ -342,6 +343,12 @@ class Document {
 							);
 							break;
 
+						case "embed":
+							$entity = array(
+								"ignore" => false,
+								"markup" => $this->keyEmbed($t)
+							);
+							break;
 						case "css":
 						case "image":
 						case "video":
@@ -358,6 +365,47 @@ class Document {
 		}
 
 		return $entity;
+	}
+
+	private function keyPage($text) {
+		if ($this->pageMode === true) {
+			$pageName = trim(str_replace(array("page:", "Page:"), "", $text));
+			if (!empty($pageName)){
+				if (!in_array($pageName, $this->pageIndex)) {
+					$this->pageIndex[$pageName] = "";
+					$this->pageCurrent = $pageName;
+				}
+				if (strtolower($pageName) === strtolower($this->pageName)) {
+					$this->pageMatch = true;
+				} else {
+					$this->pageMatch = false;
+				}
+			}
+		}
+
+		return $entity = array(
+			"ignore" => false,
+			"markup" => ""
+		);
+	}
+
+	private function keyTitle($text) {
+		$title = trim(str_replace(array("title:", "Title:"), "", $text));
+		if ($this->pageMode === true) {
+			if ($this->pageMatch === true) {
+				$this->pageTitle = $title;
+			}
+			if (isset($this->pageIndex[$this->pageCurrent])) {
+				$this->pageIndex[$this->pageCurrent] = $title;
+			}
+		} else {
+			$this->pageTitle = $title;
+		}
+
+		return $entity = array(
+			"ignore" => false,
+			"markup" => ""
+		);
 	}
 
 	private function addFunctionalElement($t) {
@@ -395,6 +443,382 @@ class Document {
 		return "";
 	}
 
+	private function keyEmbed($text) {
+		$html = "";
+		$parts = explode(":", $text, 2);
+		if (isset($parts[1])) {
+			$url = trim($parts[1]);
+
+		/*	All external embeds must start with HTTP. Ideally HTTPS but lets not be picky just yet */
+			if ($this->startsWith($url, "http")) {
+
+				$host = str_replace("www.", "", parse_url($url, PHP_URL_HOST));
+				switch ($host) {
+					case "documentcloud.org":
+						$html = $this->embedDocumentCloud($url);
+						break;
+
+				/*	Video */
+					case "youtube.com":
+					case "youtu.be":
+						$html = $this->embedYouTube($url);
+						break;
+					case "vimeo.com":
+						$html = $this->embedVimeo($url);
+						break;
+					case "hulu.com":
+						$html = $this->embedHulu($url);
+						break;
+
+				/*	Social */
+					case "twitter.com":
+						$html = $this->embedTwitter($url);
+						break;
+					case "instagram.com":
+						$html = $this->embedInstagram($url);
+						break;
+					case "facebook.com":
+					case "connect.facebook.net":
+						$html = $this->embedFacebook($url, $content);
+						break;
+
+					case "cdn.playbuzz.com":
+						$html = $this->embedPlaybuzz($content);
+						break;
+					case "google.com":
+						$html = $this->embedGoogleMap($url);
+						break;
+
+				/*	Audio */
+					case "soundcloud.com":
+					case "w.soundcloud.com":
+						$html = $this->embedSoundCloud($url);
+						break;
+					case "spotify.com":
+					case "embed.spotify.com":
+						$html = $this->embedSpotify($url);
+						break;
+
+					default:
+						if (strpos($content, "</iframe>") > 0) {
+							$embedHTML = $this->parseIframe($content);
+						} else {
+							$embedHTML = "<!-- embed not recognized -->";
+						}
+				}
+
+			}
+		}
+		return $html;
+	}
+
+/*	Misc */
+
+	/*
+	DocumetCloud
+	*/
+	private function embedDocumentCloud($srcLink) {
+		$url = str_replace("http://", "https://", $srcLink);
+		$dataUrl = "data-url=$url";
+		$scriptLink = "//assets.documentcloud.org/viewer/loader.js";
+		$sectionContent = "<a href=$url target=\"_blank\">$url</a>";
+		$html = $this->embedBasicScript($scriptLink, "documentcloud", $sectionContent, "", $dataUrl);
+		return $html;
+	}
+
+/*	Video */
+
+	/*
+	YouTube
+	Docs
+		https://developers.google.com/youtube/player_parameters
+		http://stackoverflow.com/a/26660288/24224
+	Example URLs:
+		https://www.youtube.com/watch?v=y2bX2UkQpRI
+		https://youtube.com/v/y2bX2UkQpRI
+		https://youtube.com/vi/y2bX2UkQpRI
+		https://youtube.com/?v=y2bX2UkQpRI
+		https://youtube.com/?vi=y2bX2UkQpRI
+		https://youtube.com/watch?v=y2bX2UkQpRI
+		https://youtube.com/watch?vi=y2bX2UkQpRI
+		https://youtu.be/y2bX2UkQpRI
+		https://http://youtu.be/y2bX2UkQpRI?t=30m26s
+		https://youtube.com/embed/y2bX2UkQpRI
+	*/
+	private function embedYouTube($srcLink) {
+		$html = $srcLink;
+		if (preg_match("#([\/|\?|&]vi?[\/|=]|youtu\.be\/|embed\/)(\w+)#", $srcLink, $matches)) {
+			$videoId = end($matches);
+			$url = "https://www.youtube.com/embed/" . $videoId;
+			$html = $this->embedBasicIframe($url, "youtube", "video embed-youtube aspect-16-9");
+		}
+		return $html;
+	}
+
+	/*
+	Vimeo
+	Docs
+
+	Example URL:
+	https://vimeo.com/244506823
+	<iframe src="https://player.vimeo.com/video/244506823" width="640" height="360" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>
+	*/
+	private function embedVimeo($srcLink) {
+		if (strpos($srcLink, "vimeo.com") !== false) {
+			preg_match("/vimeo.com\/([\w\d]*)/", $srcLink, $matches);
+			$videoId = end($matches);
+			$srcLink = "https://player.vimeo.com/video/" . $videoId;
+		}
+		$html = $this->embedBasicIframe($srcLink, "vimeo", "video embed-vimeo aspect-16-9");
+		return $html;
+	}
+	
+	/*
+	Hulu
+	Docs
+	http://stackoverflow.com/questions/37821757/is-there-an-iframe-based-embed-for-the-hulu-video-player
+	Example URL:
+	http://www.hulu.com/embed/xU5ewlrAzMdqdjaUwT5z4g
+	*/
+	private function embedHulu($srcLink) {
+		if (strpos($srcLink, "embed.html") == false) {
+			preg_match("/embed\/([\w\d]*)/", $srcLink, $matches);
+			$videoId = end($matches);
+			$srcLink = "http://www.hulu.com/embed.html?eid=" . $videoId;
+		}
+		$html = $this->embedBasicIframe($srcLink, "hulu", "video embed-hulu aspect-16-9");
+		return $html;
+	}
+
+/*	Social */
+
+	/*
+	Twitter
+	Docs:
+		https://dev.twitter.com/web/embedded-tweets/cms
+	Example URL:
+		https://twitter.com/sfchronicle/status/841544173631205376
+	*/
+	private function embedTwitter($srcLink) {
+		$html = $srcLink;
+		if (strpos($srcLink, "status") > 0) {
+			$url = str_replace("http://", "https://", $srcLink);
+
+			$dataUrl = "data-url=$url";
+			$dataUrl = "url=$url";
+			$scriptLink = "https://platform.twitter.com/widgets.js";
+			$sectionContent = implode("\n", array(
+				"<blockquote class=\"twitter-tweet\">",
+					"<a href=\"{$url}\">{$url}</a>",
+				"</blockquote>"
+			));
+
+			if ($this->embedLazyLoad === false) {
+				$sectionContent .= "<script src=\"{$scriptLink}\"></script>";
+			}
+			/* provide a custom class to avoid applying fallback 4:3 aspect ratio */
+			$html = $this->embedBasicScript($scriptLink, "twitter", $sectionContent, "media-twitter", $dataUrl);
+		}
+		return $html;
+	}
+
+
+	/*
+	Instagram
+	Docs:
+	https://www.instagram.com/developer/embedding/
+	Example URL:
+	https://www.instagram.com/p/BNicURWD7Vj/
+	*/
+	private function embedInstagram($srcLink) {
+		$html = $srcLink;
+		if (strpos($srcLink, "instagram.com") > 0) {
+			$url = str_replace("http://", "https://", $srcLink);
+			$dataUrl = "data-url=$url";
+			$scriptLink = "//platform.instagram.com/en_US/embeds.js";
+			$sectionContent = implode("\n", array(
+				"<blockquote class=\"instagram-media\" data-instgrm-captioned data-instgrm-version=7>",
+					"<a href=$url>$url</a>",
+				"</blockquote>"
+			));
+			if ($this->embedLazyLoad === false) {
+				$sectionContent .= "<script src=\"{$scriptLink}\"></script>";
+			}
+			$html = $this->embedBasicScript($scriptLink, "instagram", $sectionContent, "media-instagram", $dataUrl);
+		}
+		return $html;
+	}
+
+
+	/*
+	SoundCloud
+	Works with embed URLs and regular SoundCloud links.
+	Docs
+		https://soundcloud.com/pages/embed
+	Example URL:
+		https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/34019569&amp;color=0066cc
+	*/
+	private function embedSoundCloud($srcLink) {
+		$url = str_replace("http://", "https://", $srcLink);
+		if (strpos($url, "w.soundcloud") === false && strpos($url, "api.soundcloud") === false) {
+			$url = implode("\n", array(
+				"https://w.soundcloud.com/player/?",
+				"url={$url}&",
+				"auto_play=false&",
+				"buying=true&liking=false&",
+				"download=true&",
+				"sharing=true&",
+				"show_artwork=true&",
+				"show_comments=false&",
+				"show_playcount=false&",
+				"show_user=true&",
+				"hide_related=false&",
+				"visual=false&",
+				"start_track=0&",
+				"callback=true"
+			));
+		}
+		$html = $this->embedBasicIframe($url, "soundcloud", "audio media-soundcloud");
+		return $html;
+	}
+
+	/*
+	Facebook
+	Works with iframe and script embeds
+	Examples:
+		https://www.facebook.com/plugins/post.php?
+			href=https%3A%2F%2Fwww.facebook.com%2FcandaceSpayne%2Fvideos%2F10209653193067040%2F&amp;
+			width=500&amp;
+			show_text=true&amp;
+			appId=254809167894401&amp;
+			height=634
+	*/
+	private function embedFacebook($url, $content)
+	{
+		if (strpos($url, "video") > 0) {
+			// Video embed
+			$url = preg_replace("/width=[\'\"]?\d{2,4}[\'\"]?/", "width=300", $url);
+			$url = preg_replace("/height=[\'\"]?\d{2,4}[\'\"]?/", "height=168", $url);
+			$html = $this->embedBasicIframe($url, "facebook-iframe", "embed-facebook-video aspect-16-9");
+		} else {
+			if (strpos($url, "plugins") > 0) {
+				// Iframe embed
+				$url = preg_replace("/width=[\'\"]?\d{2,4}[\'\"]?/", "width=300", $url);
+				$url = preg_replace("/height=[\'\"]?\d{2,4}[\'\"]?/", "height=380", $url);
+				$html = $this->embedBasicIframe($url, "facebook-iframe", "embed-facebook");
+			} else {
+				// Script embed
+				preg_match("/(\/\/connect\.facebook\.net\/en_US\/sdk\.js#[\d\w=&.]*)/", $content, $matches);
+				$scriptLink = end($matches);
+				$sectionContent = substr($content, 0, strpos($content, "<script>")) . substr($content,
+						strpos($content, "</script>") + 9);
+				$html = $this->embedBasicScript($scriptLink, "facebook", $sectionContent, "media-facebook");
+			}
+		}
+
+		return $html;
+	}
+
+	/*
+	PlayBuzz
+	Docs:
+		https://publishers.playbuzz.com/academy/how_to/how-do-i-embed/
+	Example URL:
+		http://www.playbuzz.com/item/b6b22c71-46da-48d6-8005-83ab4e1f8830
+	*/
+	private function embedPlaybuzz($content) {
+		$div = trim(strip_tags($content, "<div>"));
+		$scriptLink = "//cdn.playbuzz.com/widget/feed.js";
+		$html = $this->embedBasicScript($scriptLink, "playbuzz", $div, "");
+		return $html;
+	}
+
+	/*
+	Spotify
+	Works with embed URLs
+	Docs
+		https://soundcloud.com/pages/embed
+	Example URL:
+		https://embed.spotify.com/?uri=spotify%3Auser%3Asfchronicle%3Aplaylist%3A4zxPdQDo2VKvl6GFc7dBDF
+	*/
+	private function embedSpotify($srcLink) {
+		$html = $this->embedBasicIframe($srcLink, "spotify", "audio media-spotify");
+		return $html;
+	}
+
+	/*
+	Google Maps
+	Docs:
+	https://developers.google.com/maps/documentation/embed/guide
+	Example URL:
+	https://www.google.com/maps/embed?pb=!1m14!1m8!1m3!1d3153.336280669685!2d-122.4087719!3d37.7821582!3m2!1i1024!2i768!4f13.1!3m3!1m2!!2sSan+Francisco+Chronicle!
+	*/
+	private function embedGoogleMap($srcLink) {
+		$html = $srcLink;
+		if (strpos($srcLink, "google.com/maps") > 0) {
+			$html = $this->embedBasicIframe($srcLink, "google-maps", "media-embed-aspect-1-1");
+		}
+		return $html;
+	}
+
+
+	/*
+	 Basic Iframe Embed
+	 */
+	private function embedBasicIframe($srcLink, $dataComponent = false, $customClasses = "", $customAttrbs = "") {
+		$url = str_replace("http://", "https://", $srcLink);
+		$dataComponent = !$dataComponent ? "misc-iframe" : $dataComponent;
+		if (is_array($customClasses)) {
+			$customClasses = implode(" ", $customClasses);
+		}
+
+		// $html = implode("\n", array(
+		// 	"<section class=\"embed " . $customClasses . "\">",
+		// 	"<iframe data-progressive=\"true\" data-component=$dataComponent data-url=$url " . $customAttrbs .
+		// 	" frameborder=\"0\" scrolling=\"0\" allowfullscreen webkitallowfullscreen mozallowfullscreen msallowfullscreen>",
+		// 	"</iframe>",
+		// 	"</section>"
+		// ));
+
+		$html = implode("\n", array(
+			"<section class=\"embed " . $customClasses . "\">",
+			"<iframe data-progressive=\"true\" data-component=$dataComponent src=$url " . $customAttrbs .
+			" frameborder=\"0\" scrolling=\"0\" allowfullscreen webkitallowfullscreen mozallowfullscreen msallowfullscreen>",
+			"</iframe>",
+			"</section>"
+		));
+
+		return $html;
+	}
+
+	/*
+	 Basic Script Embed
+	 */
+	private function embedBasicScript(
+		$srcLink,
+		$dataComponent = false,
+		$customContent = "",
+		$customClasses = "",
+		$customAttrbs = ""
+	) {
+		$url = str_replace("http://", "https://", $srcLink);
+		$dataComponent = !$dataComponent ? "misc-embed-script" : $dataComponent;
+		if (is_array($customClasses)) {
+			$customClasses = implode(" ", $customClasses);
+		}
+		$html = implode("\n", array(
+			"<section class=\"media-embed " . $customClasses . "\" data-progressive=\"true\"" .
+			" data-component=$dataComponent data-js=$url " . $customAttrbs . ">",
+			$customContent,
+			"</section>"
+		));
+
+		return $html;
+	}
+
+
+
+
 /*
 	cleanURLs
 
@@ -405,10 +829,21 @@ class Document {
 
 	Rather than reply on $node->setAttribute and then $dom->saveHtml to get the revised HTML
 	we use a search and replace as there were problmes with it doing larger improper changes to the HTML.
+
+	We do't want his to run unesesariyly if:
+	* there is no link
+	* embedded media
+	
+	TODO: this handles media blocks badly :(
 */
 	private function cleanURLs($html) {
 		$hrefPosition = strrpos($html, "href=");
 		if (hrefPosition === false) {
+			return $html;
+		}
+
+		$isEmbed = strrpos($html, "media-embed");
+		if (isEmbed !== false) {
 			return $html;
 		}
 
