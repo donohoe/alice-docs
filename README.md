@@ -1,13 +1,13 @@
-# ArchieDocs
+# VeronicaDocs
 
-Quick and easy publishing with ArchieML from any Google Document.
+A simplified framework and structure for using Google Docs to edit, mange, and publish content to the web in a quick and friendly manner with minimal setup and configuration.
 
 ## Sandbox & Local Development
 ```
 mkdir ~/project
 cd  ~/project
-git clone git@github.com:donohoe/archie-docs.git
-cd archie-docs/public
+git clone git@github.com:donohoe/veronica-docs.git
+cd veronica-docs/public
 php -S localhost:2340
 ```
 
