@@ -57,6 +57,7 @@ There are a number of Google Documents already Published to the web that demonst
 * Embeds
   * Embed external media and elements.
   * Example: Twitter, Instagram, Google Forms, YouTube etc.
+* Syntax for indicating group of images to be treated as a Slideshow
 
 ## Dependencies
 
