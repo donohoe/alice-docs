@@ -1,0 +1,87 @@
+html, body {
+	font-size: 16px;
+	margin:  0;
+	padding: 0;
+}
+
+html, body {
+	font-family: "Arial";
+}
+img {
+	width: 100%;
+	max-width: 400px;
+}
+
+header {
+	width: 100%;
+	margin: 0;
+	height: 50px;
+	border-bottom: 1px solid #ccc;
+}
+
+header a {
+	line-height: 50px;
+}
+
+#navigation {
+	width: 100%;
+	max-width: 600px;
+	margin: 0 auto;
+}
+
+#content {
+	width: 100%;
+	max-width: 620px;
+	margin: 0 auto;
+}
+
+/* Gnereal */
+
+h1, h2, h3, h4, h5, h6, h7 {
+	margin:  0.4em 0 8px 0;
+}
+
+p {
+	margin: 0;
+	margin-bottom: 16px;
+	line-height: 23px;
+}
+
+ol, ul {
+	margin: 0;
+	margin-bottom: 16px;
+	padding-left: 0;
+}
+
+ol li,
+ul li  {
+	margin-left: 25px !important;
+	line-height: 22px;
+}
+
+table {
+	border-spacing: 0;
+	border-collapse: collapse;
+}
+
+table p {
+	padding: 0;
+	margin-bottom: 0px;
+	min-height: 32px;
+}
+/* Embeds */
+
+.media-embed {
+	width: 100%;
+	max-width: 600px;
+}
+
+.media-embed iframe {
+	width: 100%;
+	max-width: 500px;
+}
+
+
+
+
+
