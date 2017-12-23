@@ -1,4 +1,4 @@
-# VeronicaDocs
+# AliceDocs
 
 A simplified framework and structure for using Google Docs editor to write, mange, and publish content to the web in a quick and friendly manner with minimal setup and configuration.
 
@@ -6,8 +6,8 @@ A simplified framework and structure for using Google Docs editor to write, mang
 ```
 mkdir ~/project
 cd  ~/project
-git clone git@github.com:donohoe/veronica-docs.git
-cd veronica-docs/public
+git clone git@github.com:donohoe/alice-docs.git
+cd alice-docs/public
 php -S localhost:2340
 ```
 
