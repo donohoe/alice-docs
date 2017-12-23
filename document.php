@@ -183,52 +183,50 @@ class Document {
 			if (in_array($n, $allowedTags)) {
 				$e = pq($el);
 				$t = trim($e->text());
-
 				$noImage = strpos($t, "<img ");
 
-				if ($t === "" && $noImage) {
-					$nl = 1;
+				if (empty($t) && $n !== "hr" && $noImage) {
+					continue;
+				}
+				$el = "";
+
+			/*	Check for multi-lines and stop it beyond 2 in a row */
+				if ($nl === 1) {
+					$content[] = "<br>";
+					$nl = 0;
+					continue;
+				}
+
+			/*	Check for a Key */
+				$entity = $this->keyEntityManager($t);
+				if (!$entity["ignore"]) {
+					$el = $entity["markup"];
 				} else {
 
-					$el = "";
-
-				/*	Check for multi-lines and stop it beyond 2 in a row */
-
-					if ($nl === 1) {
-						$el = "<br>";
-						$nl = 0;
+				/*	Check for Tag */
+					$h = trim($e->html());
+					if (!$this->startsWith($h, ":")) { /* Ignore lines starting with colon */
+						$el = "<" . $n . ">" . $h . "</" . $n . ">";
 					}
+				}
 
-				/*	Check for a Key */
-
-					$entity = $this->keyEntityManager($t);
-					if (!$entity["ignore"]) {
-						$el = $entity["markup"];
-					} else {
-
-					/*	Check for Tag */
-
-						$h = trim($e->html());
-						if (!$this->startsWith($h, ":")) { /* Ignore lines starting with colon */
-							$el = "<" . $n . ">" . $h . "</" . $n . ">";
-						}
-					}
-
-					if ($this->pageMode === true) {
-						if ($this->pageMatch === true) {
-							$content[] = $el;
-						}
-					} else {
+				if ($this->pageMode === true) {
+					if ($this->pageMatch === true) {
 						$content[] = $el;
 					}
-
+				} else {
+					$content[] = $el;
 				}
+
 			}
 		}
 
-		$content = implode("\n\t", $content) . "\n";
-
-		$content = $this->cleanURLs( $content );
+		if (!empty($content)) {
+			$content = implode("\n\t", $content) . "\n";
+			$content = $this->cleanURLs( $content );
+		} else {
+			$content = "";
+		}
 
 		return $content;
 	}
@@ -282,7 +280,18 @@ class Document {
 				"page-break-after:avoid",
 				"text-decoration:none",
 				"text-align:left",
+				"font-size:11pt",
+				"line-height:1.15", /* LI etc */
+				"margin-left:36pt"  /* LI etc */
 			), "", $response);
+			$response = str_replace(
+				array(
+					"font-family:\"Consolas\"",
+				), 
+				array(
+					"font-family:monospace; letter-spacing:-0.6px; word-spacing:-3px;",
+				),
+				$response);
 			$response = str_replace(array(";;;", ";;"), ";", $response);
 		}
 
@@ -304,6 +313,8 @@ class Document {
 		// );
 		
 		$allowedKeys = array(
+			"quote",
+			"escape",
 			"page",
 			"title",
 			"embed",
@@ -328,6 +339,12 @@ class Document {
 					);
 
 					switch ($key) {
+
+						case "quote":
+						case "escape":
+							$entity = $this->keyQuote($t);
+							break;
+
 						case "page":
 							$entity = $this->keyPage($t);
 							break;
@@ -365,6 +382,17 @@ class Document {
 		}
 
 		return $entity;
+	}
+
+	private function keyQuote($text) {
+		$text = trim(str_replace(array("quote:", "Quote:", "escape:", "Escape:"), "", $text));
+		if (!empty($text)) {
+			$text = "<p class=\"quote\">" . $text . "</p>";
+		}
+		return $entity = array(
+			"ignore" => false,
+			"markup" => $text
+		);
 	}
 
 	private function keyPage($text) {
