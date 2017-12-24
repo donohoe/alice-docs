@@ -24,6 +24,8 @@ Hello World
 Title: Hello
 This is simple single page example. It really doesn't get more basic than this.
 Google only allows updates to go through every 5 minutes so this isn't going to be any good for live-blogging. In addition, the code has local file caching set to 5 minutes so it could be anywhere between 5 and 10 minutes for changes to take affect.
+Optimus Prime, known in Japan as Convoy, is a fictional character from the Transformers franchise. He is the leader of the Autobots, a fictional group of sentient robots that can transform into other forms (e.g: cars and other objects). He is the most iconic of the Transformers, being frequently featured in popular culture.
+image: https://en.wikipedia.org/wiki/Optimus_Prime#/media/File:Optimus_Prime_patent.png
 ```
 3. Go to: `File > Publish` to the web...
 4. Click `Publish`
