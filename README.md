@@ -2,6 +2,8 @@
 
 A simplified framework and structure for using Google Docs editor to write, mange, and publish content to the web in a quick and friendly manner with minimal setup and configuration.
 
+In short the value propiosition is: __It doesn't require you to learn Markdown coupled with a very low barrier to setup.__
+
 ## Sandbox & Local Development
 ```
 mkdir ~/project
