@@ -14,7 +14,73 @@ php -S localhost:2340
 Browser:
 http://localhost:2340/
 
-## Linking a Google Document:
+## Usage
+
+Once a document has been set as the content source (See _Setting up a Google Document_ below), changes are published by Google every 5 minutes.
+
+_AliceDocs_ supports many formatting features found in a Google Document. In using these features, style information is captured and included within the published page. 
+
+This includes:
+
+* Styles
+  * "Normal Text", "Title", "Subtitle", and "Heading 1" through "Heading 6"
+* Text Styles
+  * Bold, Italic, Underline, Tect colos, highlight colors
+* Tables
+* Images
+
+Beyond that, support is ad-hoc and might vary as Google makes changes to their service.
+
+## Syntax
+
+Example:
+
+`key: value`
+
+The key is not case-senitive. Its okay to have trailing spaces before or after the colon serpator.
+
+These are equivalent:
+* `key:value`
+* `Key:value`
+* `KEY: value`
+
+The current supported keys are:
+
+* `title: <text>`
+  * Provides a tile for the web page.
+* `page: <page-name>`
+  * Define the beginning of content for a new page. 
+  * If you follow this with another _title_ key, you can define the specific title for that page.
+  * There is no hard-limit to the number of page syou can have by using more _page_ keys.
+* `image: <url>`
+  * Embed an external image (GIF, PNG, JPG only).
+* `video: <url>`
+  * Embed an external video (MP4 only).
+* `quote: <text>`
+  * Used primarily to allow this to document the _key:value_ pairs on _AliceDoc_ pages.
+* `embed: <url>`
+  * Embed an external media item.
+  * Supported media items include:
+    * YouTube
+      * Example: `Embed: https://www.youtube.com/watch?v=y2bX2UkQpRI`
+    * Vimeo
+      * Example: `embed:https://vimeo.com/244506823`
+    * Giphy
+      * Example: `embed: https://giphy.com/embed/9H8dz7341cJIQ`
+    * Twitter
+      * Example: `embed: https://twitter.com/BarackObama/status/932685522820042754`
+    * Instagram
+      * Example: `embed: https://www.instagram.com/p/BcnHp6tFM5_/`
+    * SoundCloud
+      * Example: `embed: https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/34019569&amp;color=0066cc`
+    * Spotify
+      * Example: `embed: https://embed.spotify.com/?uri=spotify%3Auser%3Asfchronicle%3Aplaylist%3A4zxPdQDo2VKvl6GFc7dBDF`
+    * Planned:
+      * DocumentCloud
+      * Google Maps
+
+
+## Setting up a Google Document:
 
 1. Create a new Google Document by visiting this link:
 https://docs.google.com/document/create
