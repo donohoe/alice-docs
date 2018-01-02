@@ -123,8 +123,8 @@ __3. Pages__
 ## To Do
 
 * Question: Remove phpQuery as a dependency?
-* ~~More documentation on usage (multi-page etc)~~
-* ~~Embeds
+* ~~More documentation on usage (multi-page etc)
+* Embeds
   * Embed external media and elements.
   * Example: Twitter, Instagram, Google Forms, YouTube etc.~~
 * Syntax for indicating group of images to be treated as a Slideshow
