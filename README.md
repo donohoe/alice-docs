@@ -110,7 +110,7 @@ The URL will look like this:
 
 `docs.google.com/document/d/e/2PACX-1vQ76OboMhN5zvMZ43LMsu3SvnGts7m8eM3k0VAB5rL22KNjOISNNpN4xCMNyA0dwkf15pxjZ7z1C48i/pub`
 
-and uou're intersted in this part:
+and you're intersted in this part:
 
 `docs.google.com/document/d/e/`__`2PACX-1vQ76OboMhN5zvMZ43LMsu3SvnGts7m8eM3k0VAB5rL22KNjOISNNpN4xCMNyA0dwkf15pxjZ7z1C48i`__`/pub`
 
@@ -157,3 +157,7 @@ __3. Pages__
 * [phpQuery](https://github.com/punkave/phpQuery)
   * [Documentation](https://code.google.com/archive/p/phpquery/wikis/Manual.wiki)
   * Example: [Manipulating DOM Documents with phpQuery](https://codingexplained.com/coding/php/manipulating-dom-documents-with-phpquery)
+
+## Problems, Qestions, Typos?
+
+_Pull Requests_ are welcome or create a [new Issue](https://github.com/donohoe/alice-docs/issues/new) plz.
