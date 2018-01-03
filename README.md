@@ -148,12 +148,13 @@ __3. Pages__
 ## To Do
 
 * Question: Remove phpQuery as a dependency?
-* ~~More documentation on usage (multi-page etc)~~
+* Lazy-load embeds and images by default via standardized JS
+* Syntax for indicating group of images to be treated as a Slideshow
+* ~~New round of documentation on usage (multi-page, title, etc)~~
 * Embeds
   * ~~Embed external media and elements.~~
-  * Example: ~~Twitter, Instagram, Google Forms, YouTube etc.~~
-* Syntax for indicating group of images to be treated as a Slideshow
-* Quote or escape things so I can show code snippets
+  * Example: ~~Twitter, Instagram, YouTube,~~ Google Forms, etc.
+* ~~Quote or escape things so I can show code snippets~~
 
 ## Dependencies
 
