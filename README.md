@@ -83,9 +83,11 @@ The current supported keys are:
 
 ## Setting up a Google Document:
 
+### Creating a new document
+
 1. Create a new Google Document by visiting this link:
 https://docs.google.com/document/create
-2. Copy/Paste this example into the document:
+2. Copy/Paste this sample text into the document:
 ```
 Hello World
 Title: Hello
@@ -99,6 +101,26 @@ image: https://en.wikipedia.org/wiki/Optimus_Prime#/media/File:Optimus_Prime_pat
 5. When asked to confirm, choose `OK`
 6. Copy the URL that appears in as the new link
 7. Click the "X" in top-right corner to close.
+
+### Getting the document ID
+
+Now that you have the URL you need to get the ID from it. This is relatively easy.
+
+The URL will look like this:
+
+`docs.google.com/document/d/e/2PACX-1vQ76OboMhN5zvMZ43LMsu3SvnGts7m8eM3k0VAB5rL22KNjOISNNpN4xCMNyA0dwkf15pxjZ7z1C48i/pub`
+
+and uou're intersted in this part:
+
+`docs.google.com/document/d/e/`__`2PACX-1vQ76OboMhN5zvMZ43LMsu3SvnGts7m8eM3k0VAB5rL22KNjOISNNpN4xCMNyA0dwkf15pxjZ7z1C48i`__`/pub`
+
+### Modiying the code
+
+8. Open up public/index.php
+9. Update the line to reflect the ID of your dodument:
+  * `$response = $document->Run( "YOUR-DOCUMENT-ID" );`
+
+### Here's one I made earlier... 
 
 There are a number of Google Documents already Published to the web that demonstrates styles and functioanlity. They include:
 
@@ -120,14 +142,13 @@ __3. Pages__
   * [Web Publish URL](https://docs.google.com/document/d/e/2PACX-1vR-pd40hZJdD073n53Ejt5OMqADdFYDUYj1JJuA1mbuppCqcWCZ3C9WG6xRMpDYXpGo_ZOt0gShfwMK/pub)
     * Google ID is: _2PACX-1vR-pd40hZJdD073n53Ejt5OMqADdFYDUYj1JJuA1mbuppCqcWCZ3C9WG6xRMpDYXpGo_ZOt0gShfwMK_
 
-
 ## To Do
 
 * Question: Remove phpQuery as a dependency?
-* ~~More documentation on usage (multi-page etc)
+* ~~More documentation on usage (multi-page etc)~~
 * Embeds
-  * Embed external media and elements.
-  * Example: Twitter, Instagram, Google Forms, YouTube etc.~~
+  * ~~Embed external media and elements.~~
+  * Example: ~~Twitter, Instagram, Google Forms, YouTube etc.~~
 * Syntax for indicating group of images to be treated as a Slideshow
 * Quote or escape things so I can show code snippets
 
