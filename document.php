@@ -27,7 +27,7 @@ class Document {
 		$this->cacheTime = 5; /* Minutes */
 		$this->setupDirs();
 
-		$this->embedLazyLoad = false;
+		$this->lazyLoading = false;
 
 		$this->pageIndex = array();
 		$this->pageCurrent = "";
@@ -69,7 +69,8 @@ class Document {
 		);
 	}
 
-    function Run($id) {
+    function Run($id = "", $lazyloading = false) {
+		$this->lazyLoading = $lazyloading;
 		$document = $this->getDocument( $id );
 		return $document;
 	}
@@ -626,9 +627,6 @@ class Document {
 				"</blockquote>"
 			));
 
-			if ($this->embedLazyLoad === false) {
-				$sectionContent .= "<script src=\"{$scriptLink}\"></script>";
-			}
 			/* provide a custom class to avoid applying fallback 4:3 aspect ratio */
 			$html = $this->embedBasicScript($scriptLink, "twitter", $sectionContent, "media-twitter", $dataUrl);
 		}
@@ -654,7 +652,7 @@ class Document {
 					"<a href=$url>$url</a>",
 				"</blockquote>"
 			));
-			if ($this->embedLazyLoad === false) {
+			if ($this->lazyLoading === false) {
 				$sectionContent .= "<script src=\"{$scriptLink}\"></script>";
 			}
 			$html = $this->embedBasicScript($scriptLink, "instagram", $sectionContent, "media-instagram", $dataUrl);
@@ -712,13 +710,13 @@ class Document {
 			// Video embed
 			$url = preg_replace("/width=[\'\"]?\d{2,4}[\'\"]?/", "width=300", $url);
 			$url = preg_replace("/height=[\'\"]?\d{2,4}[\'\"]?/", "height=168", $url);
-			$html = $this->embedBasicIframe($url, "facebook-iframe", "embed-facebook-video aspect-16-9");
+			$html = $this->embedBasicIframe($url, "facebook", "embed-facebook-video aspect-16-9");
 		} else {
 			if (strpos($url, "plugins") > 0) {
 				// Iframe embed
 				$url = preg_replace("/width=[\'\"]?\d{2,4}[\'\"]?/", "width=300", $url);
 				$url = preg_replace("/height=[\'\"]?\d{2,4}[\'\"]?/", "height=380", $url);
-				$html = $this->embedBasicIframe($url, "facebook-iframe", "embed-facebook");
+				$html = $this->embedBasicIframe($url, "facebook", "embed-facebook");
 			} else {
 				// Script embed
 				preg_match("/(\/\/connect\.facebook\.net\/en_US\/sdk\.js#[\d\w=&.]*)/", $content, $matches);
@@ -780,7 +778,7 @@ class Document {
 	 */
 	private function embedBasicIframe($srcLink, $dataComponent = false, $customClasses = "", $customAttrbs = "") {
 		$url = str_replace("http://", "https://", $srcLink);
-		$dataComponent = !$dataComponent ? "misc-iframe" : $dataComponent;
+		$dataComponent = !$dataComponent ? "iframe" : $dataComponent;
 		if (is_array($customClasses)) {
 			$customClasses = implode(" ", $customClasses);
 		}
@@ -815,14 +813,29 @@ class Document {
 		$customAttrbs = ""
 	) {
 		$url = str_replace("http://", "https://", $srcLink);
-		$dataComponent = !$dataComponent ? "misc-embed-script" : $dataComponent;
+		$dataComponent = !$dataComponent ? "script" : $dataComponent;
 		if (is_array($customClasses)) {
 			$customClasses = implode(" ", $customClasses);
 		}
+
+
+		if ($this->lazyLoading === true) {
+			$sectionAttributes = " data-progressive=\"true\" data-js=$url ";
+			$sectionScript = "";
+		} else {
+			$sectionAttributes = " data-progressive=\"false\" ";
+			$sectionScript = "<script src=\"$url\"></script>";
+		}
+
+
 		$html = implode("\n", array(
-			"<section class=\"embed " . $customClasses . "\" data-progressive=\"true\"" .
-			" data-component=$dataComponent data-js=$url " . $customAttrbs . ">",
+			"<section class=\"embed " . $customClasses . "\"" .
+			" data-component=$dataComponent " .
+			  $sectionAttributes .
+			  $customAttrbs .
+			">",
 			$customContent,
+			$sectionScript,
 			"</section>"
 		));
 
