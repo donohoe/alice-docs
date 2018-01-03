@@ -158,6 +158,6 @@ __3. Pages__
   * [Documentation](https://code.google.com/archive/p/phpquery/wikis/Manual.wiki)
   * Example: [Manipulating DOM Documents with phpQuery](https://codingexplained.com/coding/php/manipulating-dom-documents-with-phpquery)
 
-## Problems, Qestions, Typos?
+## Problems, Questions, Typos?
 
 _Pull Requests_ are welcome or create a [new Issue](https://github.com/donohoe/alice-docs/issues/new) plz.
