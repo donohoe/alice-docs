@@ -20,17 +20,35 @@ header {
 }
 
 header a {
-	line-height: 50px;
+	line-height: 26px;
 }
 
 #navigation {
 	width: 100%;
-	max-width: 600px;
+	max-width: 620px;
 	margin: 0 auto;
 }
 
+#navigation span:first-child {
+	font-weight: bold;
+	font-size: 18px;
+	margin-right: 10px;
+}
+
+#navigation a {
+	font-size: 16px;
+	margin: 7px 1px;
+	border: 1px solid #ccc;
+	border-radius: 5px;
+	padding: 3px;
+	min-width: 64px;
+	display: inline-block;
+	text-align: center;
+	text-decoration: none;
+}
+
 #content {
-	width: 100%;
+	width: 90%;
 	max-width: 620px;
 	margin: 0 auto;
 }
@@ -69,18 +87,23 @@ table p {
 	margin-bottom: 0px;
 	min-height: 32px;
 }
+
 /* Embeds */
 
-.media-embed {
+.embed {
 	width: 100%;
 	max-width: 600px;
 }
 
-.media-embed iframe {
+.embed iframe {
 	width: 100%;
 	max-width: 500px;
+	min-height: 300px;
 }
 
+.media-soundcloud iframe {
+	min-height: 172px;
+}
 
 
 

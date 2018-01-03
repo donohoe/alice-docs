@@ -33,6 +33,8 @@ $response = $document->Run( "2PACX-1vSxgb03MiCWgXywb90TyBNuU8jk-jofX0zoshuScDNyP
 <body>
 	<header>
 		<div id="navigation">
+			<span>AliceDocs</span>
+			<span>
 		<?php
 			foreach ($response["page"]["index"] as $k => $title) {
 				if (!empty($title)) {
@@ -40,6 +42,7 @@ $response = $document->Run( "2PACX-1vSxgb03MiCWgXywb90TyBNuU8jk-jofX0zoshuScDNyP
 				}
 			}
 		?>
+			</span>
 		</div>
 	</header>
 	<div id="content">
