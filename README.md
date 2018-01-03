@@ -1,10 +1,8 @@
 # AliceDocs
 
+TLDR; __It doesn't require you to learn Markdown coupled with a very low barrier to setup, topped with the collaborative editing benefits from Google.__
+
 A simplified framework and structure for using Google Docs editor to write, mange, and publish content to the web in a quick and friendly manner with minimal setup and configuration.
-
-In short the value propiosition is:
-
-__It doesn't require you to learn Markdown coupled with a very low barrier to setup, topped with the collaborative editing benefits from Google.__
 
 ## Sandbox & Local Development
 ```
@@ -15,8 +13,7 @@ cd alice-docs/public
 php -S localhost:2340
 ```
 
-Browser:
-http://localhost:2340/
+Then open this [link](http://localhost:2340/) in the browser of your choice: http://localhost:2340/
 
 ## Usage
 
