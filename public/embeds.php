@@ -48,4 +48,5 @@ $response = $document->Run( "2PACX-1vSxgb03MiCWgXywb90TyBNuU8jk-jofX0zoshuScDNyP
 	<div id="content">
 		<?php print $response["content"]; ?>
 	</div>
+	<script src="js/main.js"></script>
 </body>
