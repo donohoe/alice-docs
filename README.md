@@ -24,13 +24,16 @@ _AliceDocs_ supports many formatting features found in a Google Document. In usi
 This includes:
 
 * Styles
-  * "Normal Text", "Title", "Subtitle", and "Heading 1" through "Heading 6"
+  * "Normal Text", 
+  * "Title", "Subtitle", and 
+  * "Heading 1" through "Heading 6"
 * Text Styles
-  * Bold, Italic, Underline, Tect colors, highlight colors
+  * Bold, Italic, Underline, color, highlight colors
 * Tables
 * Images
+  * Embedded images are then hosted on Googles servers though I don't recommend using Google as your de facto image host.
 
-Beyond that, support is ad-hoc and might vary as Google makes changes to their service.
+Beyond that, support is ad-hoc and might vary as Google makes changes to their service. In general we've found that a lot of styles naturally comes through to _AliceDocs_.
 
 ## Syntax
 
@@ -38,7 +41,7 @@ Example:
 
 `key: value`
 
-The key is not case-senitive. Its okay to have trailing spaces before or after the colon serpator.
+The key is not case-sensitive. Its okay to have trailing spaces before or after the colon separator.
 
 These are equivalent:
 * `key:value`
@@ -52,7 +55,7 @@ The current supported keys are:
 * `page: <page-name>`
   * Define the beginning of content for a new page. 
   * If you follow this with another _title_ key, you can define the specific title for that page.
-  * There is no hard-limit to the number of page syou can have by using more _page_ keys.
+  * There is no hard-limit to the number of pages you can have by using more _page_ keys.
 * `image: <url>`
   * Embed an external image (GIF, PNG, JPG only).
 * `video: <url>`
@@ -110,19 +113,19 @@ The URL will look like this:
 
 `docs.google.com/document/d/e/2PACX-1vQ76OboMhN5zvMZ43LMsu3SvnGts7m8eM3k0VAB5rL22KNjOISNNpN4xCMNyA0dwkf15pxjZ7z1C48i/pub`
 
-and you're intersted in this part:
+and you're interested in this part:
 
 `docs.google.com/document/d/e/`__`2PACX-1vQ76OboMhN5zvMZ43LMsu3SvnGts7m8eM3k0VAB5rL22KNjOISNNpN4xCMNyA0dwkf15pxjZ7z1C48i`__`/pub`
 
-### Modiying the code
+### Modifying the code
 
 8. Open up public/index.php
-9. Update the line to reflect the ID of your dodument:
+9. Update the line to reflect the ID of your document:
   * `$response = $document->Run( "YOUR-DOCUMENT-ID" );`
 
 ### Here's one I made earlier... 
 
-There are a number of Google Documents already Published to the web that demonstrates styles and functioanlity. They include:
+There are a number of Google Documents already Published to the web that demonstrates styles and functionality. They include:
 
 __1. Hello World__
   * Very basic example.
