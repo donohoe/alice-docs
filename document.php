@@ -62,8 +62,6 @@ class Document {
 				"(https?:\/\/w\.soundcloud.com\/player\/\?url=https%3A\/\/api\.soundcloud\.com\/.*\")",
 				"(https?:\/\/w{0,3}\.?soundcloud.com\/[\w\d\-\_]*\/[\w\d\-]*\/?)",
 				"(https?:\/\/embed.spotify.com\/[=\dA-Za-z?%]*)\"",
-				"(https?:\/\/w{0,3}\.?hulu.com\/embed\/[\w\d]*)",
-				"(https?:\/\/w{0,3}\.?hulu.com\/embed\.html\?eid=[\w\d]*)",
 				"(https?:\/\/w{0,3}\.facebook\.com\/plugins\/post\.php\?href=https?[\w\d%&;=\.]*)\"",
 				"(\/\/connect\.facebook\.net\/en_US\/sdk\.js#[\d\w=&.]*)",
 				"(https?:\/\/w{0,3}.google.[a-z.]+\/maps\/(?:.*?))\""
@@ -307,11 +305,6 @@ class Document {
 */
 	function keyEntityManager($t) {
 
-		// return array(
-		// 	"ignore" => true,
-		// 	"markup" => "HELLO"
-		// );
-		
 		$allowedKeys = array(
 			"quote",
 			"escape",
@@ -486,19 +479,35 @@ class Document {
 						$html = $this->embedDocumentCloud($url);
 						break;
 
-				/*	Video */
+				/*	Video and Moving Image */
 					case "youtube.com":
 					case "youtu.be":
-						$html = $this->embedYouTube($url);
+						$html = $this->embedGeneric(
+							$url,
+							"#([\/|\?|&]vi?[\/|=]|youtu\.be\/|embed\/)(\w+)#",
+							"https://www.youtube.com/embed/",
+							"youtube"
+						);
 						break;
 					case "vimeo.com":
-						$html = $this->embedVimeo($url);
+						$html = $this->embedGeneric(
+							$url,
+							"/vimeo.com\/([\w\d]*)/",
+							"https://player.vimeo.com/video/",
+							"vimeo"
+						);
 						break;
-					case "hulu.com":
-						$html = $this->embedHulu($url);
+					case "giphy.com":
+						$html = $this->embedGeneric(
+							$url,
+							"/giphy.com\/embed\/([\w\d]*)/",
+							"https://giphy.com/embed/",
+							"giphy"
+						);
 						break;
 
 				/*	Social */
+
 					case "twitter.com":
 						$html = $this->embedTwitter($url);
 						break;
@@ -518,6 +527,7 @@ class Document {
 						break;
 
 				/*	Audio */
+
 					case "soundcloud.com":
 					case "w.soundcloud.com":
 						$html = $this->embedSoundCloud($url);
@@ -573,15 +583,6 @@ class Document {
 		https://http://youtu.be/y2bX2UkQpRI?t=30m26s
 		https://youtube.com/embed/y2bX2UkQpRI
 	*/
-	private function embedYouTube($srcLink) {
-		$html = $srcLink;
-		if (preg_match("#([\/|\?|&]vi?[\/|=]|youtu\.be\/|embed\/)(\w+)#", $srcLink, $matches)) {
-			$videoId = end($matches);
-			$url = "https://www.youtube.com/embed/" . $videoId;
-			$html = $this->embedBasicIframe($url, "youtube", "video embed-youtube aspect-16-9");
-		}
-		return $html;
-	}
 
 	/*
 	Vimeo
@@ -589,32 +590,16 @@ class Document {
 
 	Example URL:
 	https://vimeo.com/244506823
-	<iframe src="https://player.vimeo.com/video/244506823" width="640" height="360" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>
+		<iframe src="https://player.vimeo.com/video/244506823" 
+			width="640" height="360" frameborder="0" 
+			webkitallowfullscreen mozallowfullscreen allowfullscreen>
+		</iframe>
 	*/
-	private function embedVimeo($srcLink) {
-		if (strpos($srcLink, "vimeo.com") !== false) {
-			preg_match("/vimeo.com\/([\w\d]*)/", $srcLink, $matches);
-			$videoId = end($matches);
-			$srcLink = "https://player.vimeo.com/video/" . $videoId;
-		}
-		$html = $this->embedBasicIframe($srcLink, "vimeo", "video embed-vimeo aspect-16-9");
-		return $html;
-	}
-	
-	/*
-	Hulu
-	Docs
-	http://stackoverflow.com/questions/37821757/is-there-an-iframe-based-embed-for-the-hulu-video-player
-	Example URL:
-	http://www.hulu.com/embed/xU5ewlrAzMdqdjaUwT5z4g
-	*/
-	private function embedHulu($srcLink) {
-		if (strpos($srcLink, "embed.html") == false) {
-			preg_match("/embed\/([\w\d]*)/", $srcLink, $matches);
-			$videoId = end($matches);
-			$srcLink = "http://www.hulu.com/embed.html?eid=" . $videoId;
-		}
-		$html = $this->embedBasicIframe($srcLink, "hulu", "video embed-hulu aspect-16-9");
+	private function embedGeneric($link, $embedRegex, $embedPath, $name, $klasses = "") {
+		preg_match($embedRegex, $link, $matches);
+		$embedId = end($matches);
+		$link = $embedPath . $embedId;
+		$html = $this->embedBasicIframe($link, $name, "video embed-". $name . " " . $klasses);
 		return $html;
 	}
 
@@ -784,7 +769,7 @@ class Document {
 	private function embedGoogleMap($srcLink) {
 		$html = $srcLink;
 		if (strpos($srcLink, "google.com/maps") > 0) {
-			$html = $this->embedBasicIframe($srcLink, "google-maps", "media-embed-aspect-1-1");
+			$html = $this->embedBasicIframe($srcLink, "google-maps", "embed-aspect-1-1");
 		}
 		return $html;
 	}
@@ -835,7 +820,7 @@ class Document {
 			$customClasses = implode(" ", $customClasses);
 		}
 		$html = implode("\n", array(
-			"<section class=\"media-embed " . $customClasses . "\" data-progressive=\"true\"" .
+			"<section class=\"embed " . $customClasses . "\" data-progressive=\"true\"" .
 			" data-component=$dataComponent data-js=$url " . $customAttrbs . ">",
 			$customContent,
 			"</section>"
@@ -870,7 +855,7 @@ class Document {
 			return $html;
 		}
 
-		$isEmbed = strrpos($html, "media-embed");
+		$isEmbed = strrpos($html, "embed");
 		if (isEmbed !== false) {
 			return $html;
 		}
